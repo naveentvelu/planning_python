@@ -6,6 +6,7 @@
     Date: August 24, 2017"""
 
 import numpy as np
+from functools import reduce
 
 class StateLattice():
   def __init__(self, ndims, lower_limits = [], upper_limits = [], resolution = []):

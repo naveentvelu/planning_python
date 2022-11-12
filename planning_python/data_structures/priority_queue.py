@@ -4,6 +4,8 @@
 already in the queue, but keep a duplicate. Lazy deletes help in taking random actions."""
 import copy
 import heapq
+import random
+random.seed(10)
 
 REMOVED = '<removed-node>' #Placeholder for removed node
 
@@ -20,7 +22,8 @@ class PriorityQueue:
     #Add task of update priority of existing task
     if curr_node in self.entry_finder:
       self.remove_task(curr_node)
-    entry = [priority1, priority2, curr_node]
+    tie_breaker = random.random()
+    entry = [priority1, priority2, tie_breaker, curr_node]
     self.entry_finder[curr_node] = entry
     heapq.heappush(self.elements, entry)
     self.curr_len += 1
@@ -33,7 +36,7 @@ class PriorityQueue:
   def get(self):
     #Remove and return the lowest priority task
     while self.elements:
-      priority1, priority2, curr_node = heapq.heappop(self.elements)
+      priority1, priority2, _, curr_node = heapq.heappop(self.elements)
       if curr_node is not REMOVED:
         del self.entry_finder[curr_node]
         self.curr_len -=1

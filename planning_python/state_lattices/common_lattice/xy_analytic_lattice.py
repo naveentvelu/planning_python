@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 from math import floor, cos, sin
-from sets import Set
+#from sets import Set
 from planning_python.state_lattices.state_lattice import StateLattice
 
 class XYAnalyticLattice(StateLattice):

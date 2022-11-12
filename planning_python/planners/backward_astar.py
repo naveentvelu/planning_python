@@ -57,7 +57,7 @@ class BackwardAstar(SearchBasedPlanner):
       
       #Check 3: Stop search if start found
       if curr_node == self.start_node:
-        print "Found goal"
+        print ("Found goal")
         found_goal = True
         break
       

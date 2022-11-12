@@ -2,7 +2,7 @@
 import dubins
 import numpy as np
 from math import sqrt, sin, cos, pi, floor, radians, copysign
-from sets import Set
+#from sets import Set
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))

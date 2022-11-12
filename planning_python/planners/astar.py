@@ -52,7 +52,7 @@ class Astar(SearchBasedPlanner):
       self.visited[curr_node] = 1
       #Check 3: Stop search if goal found
       if curr_node == self.goal_node:  
-        print "Found goal"
+        print ("Found goal")
         found_goal = True
         break
       
