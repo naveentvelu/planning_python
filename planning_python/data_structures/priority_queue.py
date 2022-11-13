@@ -47,26 +47,26 @@ class PriorityQueue:
     return self.curr_len
 
   def pop_idx(self, idx):
-    priority1, priority2, curr_node = self.get_idx(idx)
+    priority1, priority2, _, curr_node = self.get_idx(idx)
     self.remove_task(curr_node)
     return priority1, priority2, curr_node
           
   def get_idx(self, idx):
     assert idx < self.curr_len, "idx chosen should be less than length of queue"
-    priority1, priority2, curr_node = self.elements[idx]
+    priority1, priority2, _, curr_node = self.elements[idx]
     while curr_node is REMOVED:
       idx += 1
-      priority1, priority2, curr_node = self.elements[idx]
+      priority1, priority2, _, curr_node = self.elements[idx]
     return priority1, priority2, curr_node
 
   def get_task(self, task):
     assert task in self.entry_finder, "task not in priority queue"
-    priority1, priority2, curr_node= self.entry_finder[task]
+    priority1, priority2, _, curr_node= self.entry_finder[task]
     return priority1, priority2, curr_node
 
   def pop_task(self, task):
     assert task in self.entry_finder, "task not in priority queue"
-    priority1, priority2, curr_node = self.entry_finder[task]
+    priority1, priority2, _, curr_node = self.entry_finder[task]
     self.remove_task(task)
     return priority1, priority2, curr_node
 
