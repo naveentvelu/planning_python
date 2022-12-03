@@ -8,6 +8,8 @@ import time
 class SearchBasedPlanner(object):
   def __init__(self):
     self.initialized=False
+    self.EXPLORED_TILE = 1
+    self.OBSTACLE_TILE = 2
 
   def initialize(self, problem):
     """Initialize the planner with some planning problem"""
@@ -23,26 +25,38 @@ class SearchBasedPlanner(object):
     self.heuristic_weight = problem.params['heuristic_weight']
 
     try:
+      # Heuristic should specify if the image patch feature set is needed
       self._use_image_patch = self.heuristic.use_image_patch
+      if self._use_image_patch:
+        self._patch_size = self.heuristic.patch_size
     except AttributeError:
       self._use_image_patch = False
+      self._patch_size = 0
 
     # Image patch requires more data collection
     if self._use_image_patch:
       # Initialize the explore history as an array
-      self._x_start = self.lattice.xlim[0]
-      self._y_start = self.lattice.ylim[0]
-      xsize = self.lattice.xlim[1] - self.lattice.xlim[0]
-      ysize = self.lattice.ylim[1] - self.lattice.ylim[0]
+      self._x_start = self.lattice.x_lims[0]
+      self._y_start = self.lattice.y_lims[0]
+      xsize = self.lattice.x_lims[1] - self.lattice.x_lims[0]
+      ysize = self.lattice.y_lims[1] - self.lattice.y_lims[0]
       self._explore_history = np.zeros((xsize, ysize), dtype=int)
+      self._set_explored(self.start_node, self.EXPLORED_TILE)
     if self.visualize:
       self.env.initialize_plot(self.lattice.node_to_state(self.start_node), self.lattice.node_to_state(self.goal_node))#, grid_res = [self.lattice.resolution[0], self.lattice.resolution[1]])
     self.initialized = True
 
-  def set_explore_history(self, node, val):
-    self._explore_history[- self._x_start + node[0], - self._y_start + node[1]] = val
+  def _set_explored(self, node, val):
+    if self._use_image_patch:
+      self._explore_history[- self._x_start + node[0], - self._y_start + node[1]] = val
 
-  def get_image_patch(self, center_node, size):
+  def is_using_image_patch(self):
+    """
+    Returns whether the planner is configured to use image patch or not
+    """
+    return self._use_image_patch
+
+  def _get_patch(self, center_node, size):
     xdx = center_node[0] - self._x_start
     ydx = center_node[1] - self._y_start
 
@@ -61,7 +75,16 @@ class SearchBasedPlanner(object):
     out[start_off_x:end_off_x, start_off_y:end_off_y] = self._explore_history[start_x:end_x, start_y:end_y]
     return out
 
-
+  def get_image_patch_as_feature(self, center_node):
+    """
+    Returns a 3 x patch_size x patch_size square matrix, giving image patch around center node
+    """
+    patch = self._get_patch(center_node, self._patch_size)
+    feature = np.zeros((3, *patch.shape), dtype=np.float32)
+    feature[0, :, :] = patch == 0
+    feature[1, :, :] = patch == 1
+    feature[2, :, :] = patch == 2
+    return feature
 
   def get_successors(self, node):
     """Given a node, query the lattice for successors, collision check the successors and return successor nodes, edges, costs, obstacle
@@ -90,9 +113,11 @@ class SearchBasedPlanner(object):
         if first_coll_state:
           invalid_edges.append((succ_edge, first_coll_state))
           # Node is explored and was found to be invalid
-          
+          self._set_explored(succ_node, self.OBSTACLE_TILE)
         continue
       neighbors.append(succ_node)
+      # Node is explored and was found to be valid
+      self._set_explored(succ_node, self.EXPLORED_TILE)
       valid_edges.append(succ_edge)
 
       #If precalculated costs available, use them else calculate them
@@ -144,7 +169,6 @@ class SearchBasedPlanner(object):
       self.visualize_search(valid_edges, invalid_edges)
       
     return neighbors, costs, valid_edges, invalid_edges    
-
 
   def plan(self):
     """This is the main function which is called for solving a planning problem.
