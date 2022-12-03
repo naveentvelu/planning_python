@@ -22,9 +22,46 @@ class SearchBasedPlanner(object):
     self.goal_node  = problem.goal_n
     self.heuristic_weight = problem.params['heuristic_weight']
 
+    try:
+      self._use_image_patch = self.heuristic.use_image_patch
+    except AttributeError:
+      self._use_image_patch = False
+
+    # Image patch requires more data collection
+    if self._use_image_patch:
+      # Initialize the explore history as an array
+      self._x_start = self.lattice.xlim[0]
+      self._y_start = self.lattice.ylim[0]
+      xsize = self.lattice.xlim[1] - self.lattice.xlim[0]
+      ysize = self.lattice.ylim[1] - self.lattice.ylim[0]
+      self._explore_history = np.zeros((xsize, ysize), dtype=int)
     if self.visualize:
       self.env.initialize_plot(self.lattice.node_to_state(self.start_node), self.lattice.node_to_state(self.goal_node))#, grid_res = [self.lattice.resolution[0], self.lattice.resolution[1]])
     self.initialized = True
+
+  def set_explore_history(self, node, val):
+    self._explore_history[- self._x_start + node[0], - self._y_start + node[1]] = val
+
+  def get_image_patch(self, center_node, size):
+    xdx = center_node[0] - self._x_start
+    ydx = center_node[1] - self._y_start
+
+    start_x = xdx - (size - 1) // 2
+    start_off_x = (max(-start_x, 0))
+    start_x = max(start_x, 0)
+    end_x = xdx + (size - 1) // 2 + 1
+    end_off_x = size - (max(end_x - self._explore_history.shape[0], 0))
+    start_y = ydx - (size - 1) // 2
+    start_off_y = (max(-start_y, 0))
+    start_y = max(start_y, 0)
+    end_y = ydx + (size - 1) // 2 + 1
+    end_off_y = size - (max(end_y - self._explore_history.shape[1], 0))
+
+    out = np.zeros((size, size))
+    out[start_off_x:end_off_x, start_off_y:end_off_y] = self._explore_history[start_x:end_x, start_y:end_y]
+    return out
+
+
 
   def get_successors(self, node):
     """Given a node, query the lattice for successors, collision check the successors and return successor nodes, edges, costs, obstacle
@@ -52,6 +89,8 @@ class SearchBasedPlanner(object):
       if not isvalid:
         if first_coll_state:
           invalid_edges.append((succ_edge, first_coll_state))
+          # Node is explored and was found to be invalid
+          
         continue
       neighbors.append(succ_node)
       valid_edges.append(succ_edge)
@@ -173,4 +212,3 @@ class SearchBasedPlanner(object):
     """When this is called the planner clears information associated with the 
     previous tree search"""
     raise NotImplementedError
-
