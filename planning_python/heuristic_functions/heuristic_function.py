@@ -6,6 +6,7 @@ from planning_python.utils import angles
 
 class HeuristicFunction(object):
   def __init__(self):
+    self.use_image_patch = False
     return None
 
   def get_heuristic(self, state, goal):
