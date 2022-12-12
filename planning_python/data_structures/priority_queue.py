@@ -5,7 +5,6 @@ already in the queue, but keep a duplicate. Lazy deletes help in taking random a
 import copy
 import heapq
 import random
-random.seed(10)
 
 REMOVED = '<removed-node>' #Placeholder for removed node
 
